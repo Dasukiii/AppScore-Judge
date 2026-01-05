@@ -111,16 +111,31 @@ export function AppLibrary() {
                 'Content-Type': 'application/json',
             };
 
+            console.log('Exporting PDF for app:', appId);
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({ appId }),
             });
 
-            const result = await response.json();
+            console.log('Response status:', response.status);
 
-            if (!result.success || !result.html) {
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`Server error: ${response.status} - ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('Result success:', result.success, 'Has HTML:', !!result.html);
+
+            if (!result.success) {
                 throw new Error(result.error || 'Failed to generate PDF');
+            }
+
+            if (!result.html) {
+                throw new Error('No HTML content received from server');
             }
 
             const printWindow = window.open('', '_blank');
@@ -135,7 +150,7 @@ export function AppLibrary() {
             }
         } catch (error) {
             console.error('Error exporting PDF:', error);
-            alert('Failed to export PDF. Please try again.');
+            alert(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 

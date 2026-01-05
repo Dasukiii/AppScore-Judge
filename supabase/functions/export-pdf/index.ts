@@ -1,6 +1,3 @@
-// Supabase Edge Function: Export Evaluation Report as PDF
-// Deploy with: supabase functions deploy export-pdf
-
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
