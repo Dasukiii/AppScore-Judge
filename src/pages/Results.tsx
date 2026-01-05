@@ -14,6 +14,7 @@ import {
     Search
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { exportAppToPDF, exportMultipleAppsToPDF } from '@/lib/pdfExport';
 
 interface LeaderboardApp {
     id: string;
@@ -143,52 +144,30 @@ export function Results() {
 
     const handleExportPDF = async (appId?: string, exportAll: boolean = false) => {
         try {
-            const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-pdf`;
-            const headers = {
-                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json',
-            };
-
-            const requestBody = exportAll
-                ? { exportAll: true }
-                : { appId: appId || id };
-
-            console.log('Exporting PDF with:', requestBody);
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(requestBody),
-            });
-
-            console.log('Response status:', response.status);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Error response:', errorText);
-                throw new Error(`Server error: ${response.status} - ${errorText}`);
-            }
-
-            const result = await response.json();
-            console.log('Result success:', result.success, 'Has HTML:', !!result.html);
-
-            if (!result.success) {
-                throw new Error(result.error || 'Failed to generate PDF');
-            }
-
-            if (!result.html) {
-                throw new Error('No HTML content received from server');
-            }
-
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(result.html);
-                printWindow.document.close();
-                setTimeout(() => {
-                    printWindow.print();
-                }, 250);
+            if (exportAll) {
+                if (leaderboard.length === 0) {
+                    alert('No apps available to export');
+                    return;
+                }
+                exportMultipleAppsToPDF(leaderboard as any);
             } else {
-                alert('Please allow popups to export PDF');
+                const targetId = appId || id;
+                if (!targetId) {
+                    alert('No app selected');
+                    return;
+                }
+
+                const { data, error } = await supabase
+                    .from('apps')
+                    .select('*')
+                    .eq('id', targetId)
+                    .single();
+
+                if (error || !data) {
+                    throw new Error('Failed to fetch app data');
+                }
+
+                exportAppToPDF(data as any);
             }
         } catch (error) {
             console.error('Error exporting PDF:', error);

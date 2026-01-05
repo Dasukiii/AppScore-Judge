@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { exportAppToPDF } from '@/lib/pdfExport';
 
 interface App {
     id: string;
@@ -105,49 +106,17 @@ export function AppLibrary() {
         e.stopPropagation();
 
         try {
-            const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-pdf`;
-            const headers = {
-                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json',
-            };
+            const { data, error } = await supabase
+                .from('apps')
+                .select('*')
+                .eq('id', appId)
+                .single();
 
-            console.log('Exporting PDF for app:', appId);
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ appId }),
-            });
-
-            console.log('Response status:', response.status);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Error response:', errorText);
-                throw new Error(`Server error: ${response.status} - ${errorText}`);
+            if (error || !data) {
+                throw new Error('Failed to fetch app data');
             }
 
-            const result = await response.json();
-            console.log('Result success:', result.success, 'Has HTML:', !!result.html);
-
-            if (!result.success) {
-                throw new Error(result.error || 'Failed to generate PDF');
-            }
-
-            if (!result.html) {
-                throw new Error('No HTML content received from server');
-            }
-
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(result.html);
-                printWindow.document.close();
-                setTimeout(() => {
-                    printWindow.print();
-                }, 250);
-            } else {
-                alert('Please allow popups to export PDF');
-            }
+            exportAppToPDF(data as any);
         } catch (error) {
             console.error('Error exporting PDF:', error);
             alert(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
