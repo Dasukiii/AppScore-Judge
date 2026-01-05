@@ -12,7 +12,8 @@ import {
     Brain,
     SortAsc,
     SortDesc,
-    Trash2
+    Trash2,
+    Download
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -96,6 +97,45 @@ export function AppLibrary() {
             alert('Failed to delete app');
         } finally {
             setDeletingId(null);
+        }
+    };
+
+    const handleExportPDF = async (appId: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+            const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-pdf`;
+            const headers = {
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ appId }),
+            });
+
+            const result = await response.json();
+
+            if (!result.success || !result.html) {
+                throw new Error(result.error || 'Failed to generate PDF');
+            }
+
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(result.html);
+                printWindow.document.close();
+                setTimeout(() => {
+                    printWindow.print();
+                }, 250);
+            } else {
+                alert('Please allow popups to export PDF');
+            }
+        } catch (error) {
+            console.error('Error exporting PDF:', error);
+            alert('Failed to export PDF. Please try again.');
         }
     };
 
@@ -293,12 +333,21 @@ export function AppLibrary() {
                                                 rel="noopener noreferrer"
                                                 className="p-1.5 rounded-lg hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] hover:text-[var(--color-primary-600)] transition-colors cursor-pointer"
                                                 onClick={(e) => e.stopPropagation()}
+                                                title="Visit app"
                                             >
                                                 <ExternalLink size={16} />
                                             </a>
                                             <div
+                                                className="p-1.5 rounded-lg hover:bg-[var(--color-primary-50)] text-[var(--color-text-muted)] hover:text-[var(--color-primary-600)] transition-colors cursor-pointer"
+                                                onClick={(e) => handleExportPDF(app.id, e)}
+                                                title="Export to PDF"
+                                            >
+                                                <Download size={16} />
+                                            </div>
+                                            <div
                                                 className="p-1.5 rounded-lg hover:bg-red-50 text-[var(--color-text-muted)] hover:text-red-500 transition-colors cursor-pointer"
                                                 onClick={(e) => deleteApp(app.id, e)}
+                                                title="Delete app"
                                             >
                                                 {deletingId === app.id ? (
                                                     <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />

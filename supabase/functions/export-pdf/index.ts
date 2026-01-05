@@ -1,116 +1,103 @@
 // Supabase Edge Function: Export Evaluation Report as PDF
 // Deploy with: supabase functions deploy export-pdf
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
 interface ExportRequest {
-    evaluationId?: string;
     appId?: string;
-    dateFrom?: string;
-    dateTo?: string;
+    appIds?: string[];
+    exportAll?: boolean;
 }
 
-serve(async (req) => {
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders });
+Deno.serve(async (req: Request) => {
+    if (req.method === "OPTIONS") {
+        return new Response(null, {
+            status: 200,
+            headers: corsHeaders,
+        });
     }
 
     try {
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-        const { evaluationId, appId, dateFrom, dateTo }: ExportRequest = await req.json();
+        const { appId, appIds, exportAll }: ExportRequest = await req.json();
 
-        // Fetch evaluation data
         let query = supabase
-            .from('evaluations')
-            .select(`
-        *,
-        app:apps (
-          id,
-          name,
-          owner,
-          url,
-          description
-        )
-      `);
+            .from("apps")
+            .select("*")
+            .not("total_score", "is", null);
 
-        if (evaluationId) {
-            query = query.eq('id', evaluationId);
-        } else if (appId) {
-            query = query.eq('app_id', appId);
+        if (appId) {
+            query = query.eq("id", appId);
+        } else if (appIds && appIds.length > 0) {
+            query = query.in("id", appIds);
+        } else if (!exportAll) {
+            throw new Error("Either appId, appIds, or exportAll must be provided");
         }
 
-        if (dateFrom) {
-            query = query.gte('created_at', dateFrom);
-        }
-        if (dateTo) {
-            query = query.lte('created_at', dateTo);
-        }
-
-        const { data: evaluations, error } = await query.order('created_at', { ascending: false });
+        const { data: apps, error } = await query.order("total_score", { ascending: false });
 
         if (error) {
             throw new Error(`Database error: ${error.message}`);
         }
 
-        if (!evaluations || evaluations.length === 0) {
-            throw new Error('No evaluations found');
+        if (!apps || apps.length === 0) {
+            throw new Error("No apps found");
         }
 
-        // Generate HTML for PDF
-        const html = generateReportHTML(evaluations);
+        const html = generateReportHTML(apps);
 
-        // For now, return HTML that can be converted to PDF client-side
-        // In production, you could use a service like Puppeteer or a PDF API
         return new Response(
             JSON.stringify({
                 success: true,
                 html,
-                evaluations,
+                apps,
             }),
             {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,
             }
         );
     } catch (error) {
-        console.error('Error exporting PDF:', error);
+        console.error("Error exporting PDF:", error);
         return new Response(
             JSON.stringify({
                 success: false,
-                error: error.message,
+                error: error instanceof Error ? error.message : "Unknown error",
             }),
             {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 500,
             }
         );
     }
 });
 
-function generateReportHTML(evaluations: any[]): string {
+function generateReportHTML(apps: any[]): string {
     const criteriaLabels: Record<string, string> = {
-        ux_score: 'User Experience',
-        usefulness_score: 'Usefulness',
-        reliability_score: 'Reliability',
-        data_handling_score: 'Data Handling',
-        clarity_score: 'Clarity',
+        ux_score: "User Experience",
+        usefulness_score: "Usefulness",
+        reliability_score: "Reliability",
+        data_handling_score: "Data Handling",
+        clarity_score: "Clarity",
     };
 
-    const formatDate = (date: string) => new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+    const formatDate = (date: string) =>
+        new Date(date).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
 
     return `
 <!DOCTYPE html>
@@ -128,6 +115,7 @@ function generateReportHTML(evaluations: any[]): string {
       padding: 40px;
       max-width: 800px;
       margin: 0 auto;
+      background: #ffffff;
     }
     .header {
       text-align: center;
@@ -144,12 +132,13 @@ function generateReportHTML(evaluations: any[]): string {
       color: #64748b;
       font-size: 14px;
     }
-    .evaluation {
+    .app-report {
       margin-bottom: 40px;
       padding: 24px;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
       background: #f8fafc;
+      page-break-inside: avoid;
     }
     .app-header {
       display: flex;
@@ -171,6 +160,10 @@ function generateReportHTML(evaluations: any[]): string {
       color: #64748b;
       margin-bottom: 20px;
     }
+    .app-meta a {
+      color: #4f46e5;
+      text-decoration: none;
+    }
     .scores-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -190,28 +183,88 @@ function generateReportHTML(evaluations: any[]): string {
       color: #64748b;
       margin-bottom: 4px;
       text-transform: uppercase;
+      font-weight: 600;
     }
     .score-item .score {
       font-size: 20px;
       font-weight: 600;
       color: #1e293b;
     }
-    .feedback {
+    .section {
       margin-top: 20px;
       padding: 16px;
       background: white;
       border-radius: 8px;
       border: 1px solid #e2e8f0;
     }
-    .feedback h3 {
+    .section h3 {
       font-size: 14px;
       color: #4f46e5;
       margin-bottom: 8px;
+      text-transform: uppercase;
+      font-weight: 700;
     }
-    .feedback p {
+    .section p, .section li {
       font-size: 14px;
       color: #475569;
       white-space: pre-line;
+    }
+    .section ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .section li {
+      padding: 4px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    .section li:before {
+      content: '•';
+      position: absolute;
+      left: 8px;
+      color: #4f46e5;
+      font-weight: bold;
+    }
+    .strengths {
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+    .strengths h3 {
+      color: #16a34a;
+    }
+    .strengths li:before {
+      color: #16a34a;
+    }
+    .improvements {
+      background: #fff7ed;
+      border-color: #fed7aa;
+    }
+    .improvements h3 {
+      color: #ea580c;
+    }
+    .improvements li:before {
+      color: #ea580c;
+    }
+    .explanation-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .explanation-item {
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      border-left: 3px solid #4f46e5;
+    }
+    .explanation-item h4 {
+      font-size: 13px;
+      color: #1e293b;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .explanation-item p {
+      font-size: 13px;
+      color: #64748b;
     }
     .footer {
       text-align: center;
@@ -221,56 +274,125 @@ function generateReportHTML(evaluations: any[]): string {
       font-size: 12px;
       color: #94a3b8;
     }
+    @media print {
+      body { padding: 20px; }
+      .app-report { page-break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>AppScore Judge</h1>
-    <p>Evaluation Report • Generated on ${formatDate(new Date().toISOString())}</p>
+    <p>AI-Powered Application Evaluation Report • Generated on ${formatDate(new Date().toISOString())}</p>
   </div>
 
-  ${evaluations.map(evaluation => `
-    <div class="evaluation">
+  ${apps
+        .map(
+            (app) => `
+    <div class="app-report">
       <div class="app-header">
         <div>
-          <h2>${evaluation.app?.name || 'Unknown App'}</h2>
+          <h2>${app.name}</h2>
         </div>
-        <div class="total-score">${evaluation.total_score}%</div>
+        <div class="total-score">${app.total_score}%</div>
       </div>
-      
+
       <div class="app-meta">
-        <strong>Owner:</strong> ${evaluation.app?.owner || 'N/A'} • 
-        <strong>URL:</strong> ${evaluation.app?.url || 'N/A'} • 
-        <strong>Evaluated:</strong> ${formatDate(evaluation.created_at)}
+        <strong>Owner:</strong> ${app.owner} •
+        <strong>URL:</strong> <a href="${app.url}">${app.url}</a> •
+        <strong>Evaluated:</strong> ${formatDate(app.evaluated_at || app.created_at)}
       </div>
+
+      ${app.description ? `
+        <div class="section">
+          <h3>Description</h3>
+          <p>${app.description}</p>
+        </div>
+      ` : ""}
 
       <div class="scores-grid">
-        ${Object.entries(criteriaLabels).map(([key, label]) => `
+        ${Object.entries(criteriaLabels)
+                    .map(
+                        ([key, label]) => `
           <div class="score-item">
             <label>${label}</label>
-            <div class="score">${evaluation[key]}/5</div>
+            <div class="score">${app[key]}/5</div>
           </div>
-        `).join('')}
+        `
+                    )
+                    .join("")}
       </div>
 
-      ${evaluation.ai_feedback ? `
-        <div class="feedback">
-          <h3>AI-Generated Feedback</h3>
-          <p>${evaluation.ai_feedback}</p>
+      ${app.ux_explanation || app.usefulness_explanation || app.reliability_explanation || app.data_handling_explanation || app.clarity_explanation ? `
+        <div class="section">
+          <h3>Score Explanations</h3>
+          <div class="explanation-grid">
+            ${app.ux_explanation ? `
+              <div class="explanation-item">
+                <h4>User Experience</h4>
+                <p>${app.ux_explanation}</p>
+              </div>
+            ` : ""}
+            ${app.usefulness_explanation ? `
+              <div class="explanation-item">
+                <h4>Usefulness</h4>
+                <p>${app.usefulness_explanation}</p>
+              </div>
+            ` : ""}
+            ${app.reliability_explanation ? `
+              <div class="explanation-item">
+                <h4>Reliability</h4>
+                <p>${app.reliability_explanation}</p>
+              </div>
+            ` : ""}
+            ${app.data_handling_explanation ? `
+              <div class="explanation-item">
+                <h4>Data Handling</h4>
+                <p>${app.data_handling_explanation}</p>
+              </div>
+            ` : ""}
+            ${app.clarity_explanation ? `
+              <div class="explanation-item">
+                <h4>Clarity</h4>
+                <p>${app.clarity_explanation}</p>
+              </div>
+            ` : ""}
+          </div>
         </div>
-      ` : ''}
+      ` : ""}
 
-      ${evaluation.comments ? `
-        <div class="feedback">
-          <h3>Evaluator Comments</h3>
-          <p>${evaluation.comments}</p>
+      ${app.ai_feedback ? `
+        <div class="section">
+          <h3>AI-Generated Feedback</h3>
+          <p>${app.ai_feedback}</p>
         </div>
-      ` : ''}
+      ` : ""}
+
+      ${app.ai_strengths && app.ai_strengths.length > 0 ? `
+        <div class="section strengths">
+          <h3>Strengths</h3>
+          <ul>
+            ${app.ai_strengths.map((strength: string) => `<li>${strength}</li>`).join("")}
+          </ul>
+        </div>
+      ` : ""}
+
+      ${app.ai_improvements && app.ai_improvements.length > 0 ? `
+        <div class="section improvements">
+          <h3>Areas for Improvement</h3>
+          <ul>
+            ${app.ai_improvements.map((improvement: string) => `<li>${improvement}</li>`).join("")}
+          </ul>
+        </div>
+      ` : ""}
     </div>
-  `).join('')}
+  `
+        )
+        .join("")}
 
   <div class="footer">
     <p>© 2026 AppScore Judge. All rights reserved.</p>
+    <p style="margin-top: 8px;">AI-Powered evaluations using GPT-4o & GPT-4o-mini</p>
   </div>
 </body>
 </html>

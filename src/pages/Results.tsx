@@ -141,9 +141,44 @@ export function Results() {
         return 'bg-orange-100';
     };
 
-    const handleExportPDF = () => {
-        // TODO: Implement PDF export via Supabase Edge Function
-        alert('PDF export functionality will be implemented via Supabase Edge Function');
+    const handleExportPDF = async (appId?: string, exportAll: boolean = false) => {
+        try {
+            const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-pdf`;
+            const headers = {
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+            };
+
+            const requestBody = exportAll
+                ? { exportAll: true }
+                : { appId: appId || id };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(requestBody),
+            });
+
+            const result = await response.json();
+
+            if (!result.success || !result.html) {
+                throw new Error(result.error || 'Failed to generate PDF');
+            }
+
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(result.html);
+                printWindow.document.close();
+                setTimeout(() => {
+                    printWindow.print();
+                }, 250);
+            } else {
+                alert('Please allow popups to export PDF');
+            }
+        } catch (error) {
+            console.error('Error exporting PDF:', error);
+            alert('Failed to export PDF. Please try again.');
+        }
     };
 
     if (loading) {
@@ -169,7 +204,7 @@ export function Results() {
                         </p>
                     </div>
                     <button
-                        onClick={handleExportPDF}
+                        onClick={() => handleExportPDF(undefined, true)}
                         className="btn btn-secondary cursor-pointer"
                     >
                         <Download size={20} />
@@ -330,7 +365,7 @@ export function Results() {
                     </p>
                 </div>
                 <button
-                    onClick={handleExportPDF}
+                    onClick={() => handleExportPDF(appDetail.id)}
                     className="btn btn-primary cursor-pointer"
                 >
                     <Download size={20} />
