@@ -423,15 +423,20 @@ export function AppLibrary() {
                                     </div>
 
                                     {/* Star Ratings Mini */}
-                                    <div className="hidden md:flex items-center gap-0.5">
+                                    <div className="hidden md:flex items-center gap-0.5" title={`Avg: ${((app.ux_score + app.usefulness_score + app.reliability_score + app.data_handling_score + app.clarity_score) / 5).toFixed(1)}/5`}>
                                         {[1, 2, 3, 4, 5].map((star) => {
                                             const avgScore = (app.ux_score + app.usefulness_score + app.reliability_score + app.data_handling_score + app.clarity_score) / 5;
                                             return (
-                                                <Star
-                                                    key={star}
-                                                    size={14}
-                                                    className={star <= Math.round(avgScore) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}
-                                                />
+                                                <div key={star} className="relative">
+                                                    <Star size={14} className="text-gray-200" />
+                                                    {avgScore >= star ? (
+                                                        <Star size={14} className="absolute inset-0 fill-yellow-400 text-yellow-400" />
+                                                    ) : avgScore >= star - 0.5 ? (
+                                                        <div className="absolute inset-0 overflow-hidden w-[50%]">
+                                                            <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                                                        </div>
+                                                    ) : null}
+                                                </div>
                                             );
                                         })}
                                     </div>

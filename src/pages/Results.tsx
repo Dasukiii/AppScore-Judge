@@ -275,19 +275,16 @@ export function Results() {
                                         </div>
 
                                         {/* Score Breakdown Mini */}
-                                        <div className="hidden lg:flex items-center gap-1">
+                                        <div className="hidden lg:flex items-center gap-2">
                                             {[
-                                                app.ux_score,
-                                                app.usefulness_score,
-                                                app.reliability_score,
-                                                app.data_handling_score,
-                                                app.clarity_score
-                                            ].map((score, idx) => (
-                                                <div key={idx} className="flex items-center gap-0.5" title={`${score}/5`}>
-                                                    <Star
-                                                        size={12}
-                                                        className="fill-yellow-400 text-yellow-400"
-                                                    />
+                                                { label: 'UX', score: app.ux_score },
+                                                { label: 'USE', score: app.usefulness_score },
+                                                { label: 'REL', score: app.reliability_score },
+                                                { label: 'DATA', score: app.data_handling_score },
+                                                { label: 'CLR', score: app.clarity_score }
+                                            ].map(({ label, score }, idx) => (
+                                                <div key={idx} className="flex items-center gap-0.5" title={`${label}: ${score}/5`}>
+                                                    <Star size={10} className="fill-yellow-400 text-yellow-400" />
                                                     <span className="text-xs text-[var(--color-text-muted)]">{score}</span>
                                                 </div>
                                             ))}
@@ -459,11 +456,16 @@ export function Results() {
                                         </span>
                                         <div className="flex items-center gap-2">
                                             {[1, 2, 3, 4, 5].map((star) => (
-                                                <Star
-                                                    key={star}
-                                                    size={16}
-                                                    className={star <= value.score ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}
-                                                />
+                                                <div key={star} className="relative">
+                                                    <Star size={16} className="text-gray-200" />
+                                                    {value.score >= star ? (
+                                                        <Star size={16} className="absolute inset-0 fill-yellow-400 text-yellow-400" />
+                                                    ) : value.score >= star - 0.5 ? (
+                                                        <div className="absolute inset-0 overflow-hidden w-[50%]">
+                                                            <Star size={16} className="fill-yellow-400 text-yellow-400" />
+                                                        </div>
+                                                    ) : null}
+                                                </div>
                                             ))}
                                             <span className="text-lg font-semibold text-[var(--color-text-primary)] ml-2">
                                                 {value.score}/5

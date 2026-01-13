@@ -354,14 +354,19 @@ export function SubmitApp() {
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star
-                                                key={star}
-                                                size={14}
-                                                className={star <= value ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}
-                                            />
+                                            <div key={star} className="relative">
+                                                <Star size={14} className="text-gray-200" />
+                                                {value >= star ? (
+                                                    <Star size={14} className="absolute inset-0 fill-yellow-400 text-yellow-400" />
+                                                ) : value >= star - 0.5 ? (
+                                                    <div className="absolute inset-0 overflow-hidden w-[50%]">
+                                                        <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                                                    </div>
+                                                ) : null}
+                                            </div>
                                         ))}
                                     </div>
-                                    <span className={`font-semibold w-8 text-right ${getScoreColor(value)}`}>
+                                    <span className={`font-semibold w-10 text-right ${getScoreColor(value)}`}>
                                         {value}/5
                                     </span>
                                 </div>
