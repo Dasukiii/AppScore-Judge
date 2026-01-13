@@ -423,6 +423,34 @@ export function Results() {
                             </div>
                         </div>
                     </motion.div>
+
+                    {appDetail.screenshots && appDetail.screenshots.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-white rounded-2xl shadow-md border border-[var(--color-border)] p-6"
+                        >
+                            <h3 className="font-semibold text-[var(--color-text-primary)] mb-4">Screenshots</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                {appDetail.screenshots.map((screenshot, index) => (
+                                    <a
+                                        key={index}
+                                        href={screenshot}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block rounded-lg overflow-hidden border border-[var(--color-border)] hover:border-[var(--color-primary-400)] transition-colors cursor-pointer"
+                                    >
+                                        <img
+                                            src={screenshot}
+                                            alt={`Screenshot ${index + 1}`}
+                                            className="w-full h-24 object-cover hover:scale-105 transition-transform duration-200"
+                                        />
+                                    </a>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
                 </div>
 
                 {/* Right Column */}
