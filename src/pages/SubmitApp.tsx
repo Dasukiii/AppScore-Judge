@@ -366,8 +366,8 @@ export function SubmitApp() {
                                             </div>
                                         ))}
                                     </div>
-                                    <span className={`font-semibold w-10 text-right ${getScoreColor(value)}`}>
-                                        {value}/5
+                                    <span className={`font-semibold w-12 text-right ${getScoreColor(value)}`}>
+                                        {Number(value).toFixed(1)}/5
                                     </span>
                                 </div>
                             ))}

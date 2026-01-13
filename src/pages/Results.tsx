@@ -283,9 +283,9 @@ export function Results() {
                                                 { label: 'DATA', score: app.data_handling_score },
                                                 { label: 'CLR', score: app.clarity_score }
                                             ].map(({ label, score }, idx) => (
-                                                <div key={idx} className="flex items-center gap-0.5" title={`${label}: ${score}/5`}>
+                                                <div key={idx} className="flex items-center gap-0.5" title={`${label}: ${Number(score).toFixed(1)}/5`}>
                                                     <Star size={10} className="fill-yellow-400 text-yellow-400" />
-                                                    <span className="text-xs text-[var(--color-text-muted)]">{score}</span>
+                                                    <span className="text-xs text-[var(--color-text-muted)]">{Number(score).toFixed(1)}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -468,7 +468,7 @@ export function Results() {
                                                 </div>
                                             ))}
                                             <span className="text-lg font-semibold text-[var(--color-text-primary)] ml-2">
-                                                {value.score}/5
+                                                {Number(value.score).toFixed(1)}/5
                                             </span>
                                         </div>
                                     </div>
