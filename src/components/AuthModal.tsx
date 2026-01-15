@@ -238,8 +238,7 @@ export function AuthModal({ isOpen, onClose, mode, onModeSwitch }: AuthModalProp
 
                                 <div className="pt-4 border-t border-[var(--color-border)] flex items-center justify-center gap-2 text-xs text-[var(--color-text-muted)]">
                                     <span>Powered by</span>
-                                    <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-4 h-4" />
-                                    <span className="font-medium">Kadosh AI</span>
+                                    <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-24 h-6" />
                                 </div>
                             </form>
                         </div>
