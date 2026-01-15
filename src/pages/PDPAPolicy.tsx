@@ -143,7 +143,7 @@ export function PDPAPolicy() {
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
                                     <div className="w-10 h-10 rounded-lg bg-[var(--color-primary-100)] flex items-center justify-center">
-                                        <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-6 h-6" />
+                                        <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-24 h-6" />
                                     </div>
                                     <span className="font-medium text-[var(--color-text-primary)]">Kadosh AI</span>
                                 </div>
