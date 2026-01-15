@@ -350,8 +350,7 @@ export function LandingPage() {
                         <div className="flex flex-col items-center md:items-end gap-2">
                             <div className="flex items-center gap-2 text-sm text-white/60">
                                 <span>Powered by</span>
-                                <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-5 h-5" />
-                                <span className="font-medium text-white/80">Kadosh AI</span>
+                                <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-24 h-6" />
                             </div>
                             <p className="text-sm text-white/60">
                                 © 2026 AppScore Judge. All rights reserved.
