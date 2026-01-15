@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     BarChart3,
@@ -344,13 +344,19 @@ export function LandingPage() {
                             <span className="text-lg font-bold">AppScore Judge</span>
                         </div>
                         <div className="flex items-center gap-6 text-sm text-white/60">
-                            <a href="#" className="hover:text-white transition-colors cursor-pointer">Privacy Policy</a>
-                            <a href="#" className="hover:text-white transition-colors cursor-pointer">Terms of Service</a>
-                            <a href="#" className="hover:text-white transition-colors cursor-pointer">Contact</a>
+                            <Link to="/pdpa-policy" className="hover:text-white transition-colors cursor-pointer">PDPA Policy</Link>
+                            <a href="mailto:asha@kadoshai.com" className="hover:text-white transition-colors cursor-pointer">Contact</a>
                         </div>
-                        <p className="text-sm text-white/60">
-                            © 2026 AppScore Judge. All rights reserved.
-                        </p>
+                        <div className="flex flex-col items-center md:items-end gap-2">
+                            <div className="flex items-center gap-2 text-sm text-white/60">
+                                <span>Powered by</span>
+                                <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-5 h-5" />
+                                <span className="font-medium text-white/80">Kadosh AI</span>
+                            </div>
+                            <p className="text-sm text-white/60">
+                                © 2026 AppScore Judge. All rights reserved.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </footer>

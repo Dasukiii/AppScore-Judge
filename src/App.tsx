@@ -7,6 +7,7 @@ import {
   SubmitApp,
   AppLibrary,
   Results,
+  PDPAPolicy,
 } from '@/pages';
 
 function App() {
@@ -14,8 +15,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public Route */}
+          {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/pdpa-policy" element={<PDPAPolicy />} />
 
           {/* Protected Routes */}
           <Route element={<Layout />}>
