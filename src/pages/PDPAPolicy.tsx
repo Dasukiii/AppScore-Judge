@@ -176,7 +176,7 @@ export function PDPAPolicy() {
                         </div>
                     </div>
                 </motion.div>
-            </div>
+            </div>.
         </div>
     );
 }
