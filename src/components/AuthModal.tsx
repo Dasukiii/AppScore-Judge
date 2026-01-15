@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Eye, EyeOff, Loader2, Check } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import type { AuthModalProps } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
@@ -12,7 +12,6 @@ export function AuthModal({ isOpen, onClose, mode, onModeSwitch }: AuthModalProp
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [acceptedPDPA, setAcceptedPDPA] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,9 +25,6 @@ export function AuthModal({ isOpen, onClose, mode, onModeSwitch }: AuthModalProp
             } else {
                 if (!fullName.trim()) {
                     throw new Error('Full name is required');
-                }
-                if (!acceptedPDPA) {
-                    throw new Error('Please accept the PDPA Policy to continue');
                 }
                 const { error } = await register(email, password, fullName);
                 if (error) throw error;
@@ -46,7 +42,6 @@ export function AuthModal({ isOpen, onClose, mode, onModeSwitch }: AuthModalProp
         setPassword('');
         setFullName('');
         setError('');
-        setAcceptedPDPA(false);
     };
 
     const handleModeSwitch = () => {
@@ -168,36 +163,9 @@ export function AuthModal({ isOpen, onClose, mode, onModeSwitch }: AuthModalProp
                                     </div>
                                 </div>
 
-                                {mode === 'signup' && (
-                                    <div className="flex items-start gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setAcceptedPDPA(!acceptedPDPA)}
-                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 cursor-pointer transition-colors ${
-                                                acceptedPDPA
-                                                    ? 'bg-[var(--color-primary-600)] border-[var(--color-primary-600)]'
-                                                    : 'border-[var(--color-border)] hover:border-[var(--color-primary-400)]'
-                                            }`}
-                                        >
-                                            {acceptedPDPA && <Check size={14} className="text-white" />}
-                                        </button>
-                                        <label className="text-sm text-[var(--color-text-secondary)]">
-                                            I have read and accept the{' '}
-                                            <a
-                                                href="/pdpa-policy"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-[var(--color-primary-600)] font-medium hover:text-[var(--color-primary-700)] cursor-pointer"
-                                            >
-                                                PDPA Policy
-                                            </a>
-                                        </label>
-                                    </div>
-                                )}
-
                                 <button
                                     type="submit"
-                                    disabled={loading || (mode === 'signup' && !acceptedPDPA)}
+                                    disabled={loading}
                                     className="btn btn-primary w-full text-base disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
@@ -234,12 +202,6 @@ export function AuthModal({ isOpen, onClose, mode, onModeSwitch }: AuthModalProp
                                             </button>
                                         </>
                                     )}
-                                </div>
-
-                                <div className="pt-4 border-t border-[var(--color-border)] flex items-center justify-center gap-2 text-xs text-[var(--color-text-muted)]">
-                                    <span>Powered by</span>
-                                    <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-4 h-4" />
-                                    <span className="font-medium">Kadosh AI</span>
                                 </div>
                             </form>
                         </div>
