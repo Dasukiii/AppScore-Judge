@@ -172,8 +172,7 @@ export function PDPAPolicy() {
 
                         <div className="pt-6 border-t border-[var(--color-border)] flex items-center justify-center gap-2 text-sm text-[var(--color-text-muted)]">
                             <span>Powered by</span>
-                            <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-5 h-5" />
-                            <span className="font-medium">Kadosh AI</span>
+                            <img src="/kadosh-ai-icon.png" alt="Kadosh AI" className="w-24 h-6" />
                         </div>
                     </div>
                 </motion.div>
